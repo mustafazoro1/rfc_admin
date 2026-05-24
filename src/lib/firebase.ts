@@ -1,13 +1,8 @@
 /**
  * Firebase configuration – RFC Admin Dashboard
  *
- * This file initialises the Firebase app and exports a Firestore `db` instance.
+ * This file initializes the Firebase app and exports a Firestore `db` instance.
  * Reads credentials from Vite environment variables (VITE_FIREBASE_*).
- *
- * ⚠️  Install firebase before using:
- *       pnpm add firebase          (from workspace root)
- *       – or –
- *       cd artifacts/admin && npm install firebase
  */
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -32,38 +27,34 @@ if (import.meta.env.DEV) {
   console.log("Firebase Config (DEV):", firebaseConfig);
 }
 
+// Top-level exported bindings
+let firebaseApp: any = null;
+let db: any = null;
+
 try {
-  // Check if Firebase app already exists (safe across HMR reloads)
-  const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  // Create or reuse the Firebase app instance
+  firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
   // Initialize Firestore
-  const db = getFirestore(firebaseApp);
+  db = getFirestore(firebaseApp);
 
-  // Initialize Analytics if supported
-  if (isSupported()) {
-    getAnalytics(firebaseApp);
-  }
-
-  export { firebaseApp, db };
-  export default firebaseApp;
+  // Initialize Analytics if supported (async check)
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        try {
+          getAnalytics(firebaseApp);
+        } catch (err) {
+          console.warn("Failed to initialize Firebase Analytics:", err);
+        }
+      }
+    })
+    .catch((err) => {
+      if (import.meta.env.DEV) console.warn("isSupported() failed:", err);
+    });
 } catch (error) {
   console.error("Failed to initialize Firebase:", error);
-  // Still export to prevent app crash, but log the error
-  export const firebaseApp = null;
-  export const db = null;
-  export default null;
 }
-export const firebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-/** Firestore database — use this for reading/writing RFC data */
-export const db = getFirestore(firebaseApp);
-
-// Browser-only analytics (no-op in SSR / Node)
-isSupported()
-  .then((ok) => {
-    if (ok) getAnalytics(firebaseApp);
-  })
-  .catch(() => {});
-
+export { firebaseApp, db };
 export default firebaseApp;

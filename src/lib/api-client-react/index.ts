@@ -242,15 +242,40 @@ export const useGetAdminAnalytics = () => {
         .sort((a, b) => a.date.localeCompare(b.date));
 
       // 6. Category Breakdown
-      const categoryMap = new Map<string, number>();
+      const categoryMap = new Map<string, { orders: number; revenue: number }>();
+      
+      // Initialize categories from menuItems
       menuItems.forEach((item) => {
         const cat = item.category || "Uncategorized";
-        categoryMap.set(cat, (categoryMap.get(cat) || 0) + 1);
+        if (!categoryMap.has(cat)) {
+          categoryMap.set(cat, { orders: 0, revenue: 0 });
+        }
       });
+
+      // Calculate revenue and order counts per category
+      orders.forEach((order) => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach((orderItem) => {
+            // Find the menu item to get its category
+            const menuItem = menuItems.find(m => m.name === orderItem.name);
+            const cat = menuItem?.category || "Uncategorized";
+            
+            if (!categoryMap.has(cat)) {
+              categoryMap.set(cat, { orders: 0, revenue: 0 });
+            }
+            
+            const stats = categoryMap.get(cat)!;
+            stats.orders += (Number(orderItem.quantity) || 1);
+            stats.revenue += (Number(orderItem.price) || 0) * (Number(orderItem.quantity) || 1);
+          });
+        }
+      });
+
       const categoryBreakdown = Array.from(categoryMap.entries()).map(
-        ([name, value]) => ({
-          name,
-          value,
+        ([category, stats]) => ({
+          category,
+          orders: stats.orders,
+          revenue: stats.revenue,
         }),
       );
 

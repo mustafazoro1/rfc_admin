@@ -1,7 +1,7 @@
 {
   "name": "@workspace/admin",
   "version": "0.0.0",
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@10.0.0",
   "private": true,
   "engines": {
     "node": "24.x"

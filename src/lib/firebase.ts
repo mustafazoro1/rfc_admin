@@ -27,7 +27,32 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-/** Singleton Firebase app — safe across Vite HMR reloads */
+// Log environment variables for debugging (only in development)
+if (import.meta.env.DEV) {
+  console.log("Firebase Config (DEV):", firebaseConfig);
+}
+
+try {
+  // Check if Firebase app already exists (safe across HMR reloads)
+  const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+  // Initialize Firestore
+  const db = getFirestore(firebaseApp);
+
+  // Initialize Analytics if supported
+  if (isSupported()) {
+    getAnalytics(firebaseApp);
+  }
+
+  export { firebaseApp, db };
+  export default firebaseApp;
+} catch (error) {
+  console.error("Failed to initialize Firebase:", error);
+  // Still export to prevent app crash, but log the error
+  export const firebaseApp = null;
+  export const db = null;
+  export default null;
+}
 export const firebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 

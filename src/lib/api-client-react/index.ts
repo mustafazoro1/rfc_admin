@@ -228,6 +228,15 @@ export const useGetAdminAnalytics = () => {
 
       // 5. Daily Revenue breakdown
       const dailyRevMap = new Map<string, number>();
+      
+      // Initialize the last 7 days with 0 revenue so the chart always renders a line
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split("T")[0];
+        dailyRevMap.set(dateStr, 0);
+      }
+
       orders.forEach((order) => {
         const dateStr = order.createdAt
           ? order.createdAt.split("T")[0]
@@ -237,6 +246,7 @@ export const useGetAdminAnalytics = () => {
           (dailyRevMap.get(dateStr) || 0) + (Number(order.total) || 0),
         );
       });
+      
       const dailyRevenue = Array.from(dailyRevMap.entries())
         .map(([date, revenue]) => ({ date, revenue }))
         .sort((a, b) => a.date.localeCompare(b.date));

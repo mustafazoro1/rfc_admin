@@ -1,6 +1,7 @@
 {
   "name": "@workspace/admin",
   "version": "0.0.0",
+  "packageManager": "pnpm@10",
   "private": true,
   "type": "module",
   "scripts": {
